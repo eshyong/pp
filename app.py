@@ -103,7 +103,7 @@ def decrement_score(name):
 
 def create_message(names):
     texts = ["{}'s score is now {}".format(name, scores[name]) for name in names]
-    return ', '.join(texts)
+    return '\n'.join(texts)
 
 
 def send_message(channel, text):
