@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import re
+import signal
 import sys
 
 from flask import Flask, json, request, jsonify
@@ -17,8 +18,28 @@ app = Flask(__name__)
 client = SlackClient(os.environ['SLACK_TOKEN'])
 incr_regexes = [r'<@(?P<user_name>[a-zA-Z0-9 ]+)> \+\+', r'<@(?P<user_name>[a-zA-Z0-9 ]+)>\+\+']
 decr_regexes = [r'<@(?P<user_name>[a-zA-Z0-9 ]+)> --', r'<@(?P<user_name>[a-zA-Z0-9 ]+)>--']
-scores = {}
 last_timestamp = datetime.now()
+
+
+# load scores file
+scores = {}
+try:
+    with open('.scores.json') as scores_file:
+        scores = json.load(scores_file)
+except:
+    pass
+
+
+# handle server shutdown gracefully
+def handle_sigint(signal, frame):
+    print('\nsaving scores')
+    with open('.scores.json', mode='w') as scores_file:
+        json.dump(scores, scores_file, indent=2, sort_keys=True)
+        scores_file.write('\n')
+    print('exiting')
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigint)
 
 
 @app.route('/events', methods=['POST'])
@@ -32,13 +53,17 @@ def respond():
 
     # do bot stuff here
     event = data.get('event', {})
-    if 'type' in event and event['type'] == 'message':
-        handle_message(event)
+    if 'type' in event:
+        if event['type'] == 'message':
+            handle_message(event)
+        elif event['type'] == 'app_mention':
+            handle_mention(event)
 
     return ''
 
 def handle_message(event):
     global last_timestamp
+    global scores
 
     text = event.get('text')
     channel = event.get('channel')
@@ -55,12 +80,37 @@ def handle_message(event):
     minuses = get_matches(text, decr_regexes)
  
     for name in pluses:
-        increment_score(name)
+        if name not in scores:
+            scores[name] = 0
+        scores[name] += 1
 
     for name in minuses:
-        decrement_score(name)
+        if name not in scores:
+            scores[name] = 0
+        scores[name] -= 1
 
     send_message(channel, create_message(set(pluses + minuses)))
+
+
+def handle_mention(event):
+    global last_timestamp
+
+    text = event.get('text')
+    channel = event.get('channel')
+    if text is None or channel is None:
+        return
+
+    # ignore duplicate events
+    event_timestamp = datetime.fromtimestamp(float(event.get('ts')))
+    if event_timestamp < last_timestamp:
+        return
+    last_timestamp = event_timestamp
+
+    command = text.split()[1]
+    if command == 'leaderboard':
+        send_message(channel, create_message(scores.keys()))
+    else:
+        send_message(channel, "Sorry, pp doesn't know that command")
 
 
 def get_matches(text, regexes):
@@ -85,24 +135,8 @@ def get_real_name_for_user(user_name):
     return None
 
 
-def increment_score(name):
-    global scores
-
-    if name not in scores:
-        scores[name] = 0
-    scores[name] += 1
-
-
-def decrement_score(name):
-    global scores
-
-    if name not in scores:
-        scores[name] = 0
-    scores[name] -= 1
-
-
 def create_message(names):
-    texts = ["{}'s score is now {}".format(name, scores[name]) for name in names]
+    texts = ["{}'s score is {}".format(name, scores[name]) for name in names]
     return '\n'.join(texts)
 
 
