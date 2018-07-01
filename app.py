@@ -1,4 +1,5 @@
 from datetime import datetime
+from operator import itemgetter
 import os
 import re
 import signal
@@ -108,7 +109,9 @@ def handle_mention(event):
 
     command = text.split()[1]
     if command == 'leaderboard':
-        send_message(channel, create_message(scores.keys()))
+        sorted_scores = reversed(sorted([(k, v) for k, v in scores.items()], key=itemgetter(1)))
+        names = [name for name, _ in sorted_scores]
+        send_message(channel, create_message(names))
     else:
         send_message(channel, "Sorry, pp doesn't know that command")
 
