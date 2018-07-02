@@ -9,7 +9,7 @@ from flask import Flask, json, request, jsonify
 from slackclient import SlackClient
 
 
-if 'SLACK_TOKEN' not in os.environ:
+if not os.environ.get('SLACK_TOKEN'):
     print('SLACK_TOKEN must be set when running this program')
     sys.exit(1)
 
