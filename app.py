@@ -112,7 +112,7 @@ def handle_mention(event):
         sorted_scores = reversed(sorted([(k, v) for k, v in scores.items()], key=itemgetter(1)))
         names = [name for name, _ in sorted_scores]
         if not names:
-            send_message(channel, 'sorry, no scores :man-shrugging')
+            send_message(channel, 'sorry, no scores :man-shrugging:')
         else:
             send_message(channel, create_message(names))
     else:
