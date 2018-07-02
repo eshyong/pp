@@ -151,8 +151,9 @@ def handle_mention(event):
             send_message(channel, "No user by that mention found")
             return
 
-        score = args[3]
-        scores[name] = score
+        score = int(args[3])
+        scores[real_name] = score
+        send_message(channel, create_message([real_name])
     else:
         send_message(channel, HELP_TEXT)
 
