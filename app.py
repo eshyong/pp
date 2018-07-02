@@ -111,7 +111,10 @@ def handle_mention(event):
     if command == 'leaderboard':
         sorted_scores = reversed(sorted([(k, v) for k, v in scores.items()], key=itemgetter(1)))
         names = [name for name, _ in sorted_scores]
-        send_message(channel, create_message(names))
+        if not names:
+            send_message(channel, 'sorry, no scores :man-shrugging')
+        else:
+            send_message(channel, create_message(names))
     else:
         send_message(channel, "Sorry, pp doesn't know that command")
 
