@@ -21,6 +21,17 @@ incr_regexes = [r'<@(?P<user_name>[a-zA-Z0-9 ]+)> \+\+', r'<@(?P<user_name>[a-zA
 decr_regexes = [r'<@(?P<user_name>[a-zA-Z0-9 ]+)> --', r'<@(?P<user_name>[a-zA-Z0-9 ]+)>--']
 last_timestamp = datetime.now()
 
+# constants
+HELP_TEXT = """
+Commands available:
+    @pp leaderboard
+    @pp set <@mention> <score>
+"""
+SET_HELP_TEXT = """
+Usage:
+    @pp set <@mention> <score>
+"""
+
 
 # load scores file
 scores = {}
@@ -109,16 +120,31 @@ def handle_mention(event):
         return
     last_timestamp = event_timestamp
 
-    command = text.split()[1]
+    args = text.split()
+    if len(args) < 2:
+        send_message(channel, HELP_TEXT)
+        return
+
+    command = args[1]
     if command == 'leaderboard':
         sorted_scores = reversed(sorted([(k, v) for k, v in scores.items()], key=itemgetter(1)))
         names = [name for name, _ in sorted_scores]
+
         if not names:
             send_message(channel, 'sorry, no scores :man-shrugging:')
         else:
             send_message(channel, create_message(names))
+    elif command == 'set':
+        if len(args) < 4:
+            send_message(channel, SET_HELP_TEXT)
+            return
+
+        global scores
+        name = args[2]
+        score = args[3]
+        scores[name] = score
     else:
-        send_message(channel, "Sorry, pp doesn't know that command")
+        send_message(channel, HELP_TEXT)
 
 
 def get_matches(text, regexes):
