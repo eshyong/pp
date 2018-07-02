@@ -31,6 +31,7 @@ SET_HELP_TEXT = """
 Usage:
     @pp set <@mention> <score>
 """
+USER_REGEX = r'<@(?P<user_name>[a-zA-Z0-9]+)>'
 
 
 # load scores file
@@ -140,7 +141,16 @@ def handle_mention(event):
             send_message(channel, SET_HELP_TEXT)
             return
 
-        name = args[2]
+        match = re.search(USER_REGEX, args[2])
+        if match is None:
+            send_message(channel, "User must be mentioned to set score")
+            return
+
+        real_name = get_real_name_for_user(match.group('user_name'))
+        if real_name is None:
+            send_message(channel, "No user by that mention found")
+            return
+
         score = args[3]
         scores[name] = score
     else:
