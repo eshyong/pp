@@ -108,6 +108,7 @@ def handle_message(event):
 
 def handle_mention(event):
     global last_timestamp
+    global scores
 
     text = event.get('text')
     channel = event.get('channel')
@@ -139,7 +140,6 @@ def handle_mention(event):
             send_message(channel, SET_HELP_TEXT)
             return
 
-        global scores
         name = args[2]
         score = args[3]
         scores[name] = score
