@@ -68,7 +68,9 @@ def handle_message(event):
 
     text = event.get('text')
     channel = event.get('channel')
-    if text is None or channel is None:
+    user = event.get('user')
+
+    if text is None or channel is None or user != 'UB2P4KJJE':
         return
 
     # ignore duplicate events
