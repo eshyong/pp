@@ -153,7 +153,7 @@ def handle_mention(event):
 
         score = int(args[3])
         scores[real_name] = score
-        send_message(channel, create_message([real_name])
+        send_message(channel, create_message([real_name]))
     else:
         send_message(channel, HELP_TEXT)
 
